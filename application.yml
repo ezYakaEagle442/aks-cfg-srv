@@ -82,6 +82,7 @@ spring:
   datasource:
     schema: classpath*:db/mysql/schema.sql
     data: classpath*:db/mysql/data.sql
+    url: jdbc:mysql://petcliaks.mysql.database.azure.com:3306/petclinic?useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1.2&verifyServerCertificate=true
     # url: jdbc:mysql://localhost:3306/petclinic?useSSL=false
     # url: jdbc:mysql://petcliaca-mysql-server.mysql.database.azure.com:3306/petclinic?useSSL=true
     # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
