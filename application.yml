@@ -1,29 +1,18 @@
 # COMMON APPLICATION PROPERTIES
 # 
 
-# https://learn.microsoft.com/en-us/training/modules/secure-application-secrets-use-key-vault/6-update-application-configure
-# https://techcommunity.microsoft.com/t5/apps-on-azure-blog/delete-passwords-passwordless-connections-for-java-apps-to-azure/ba-p/3638714
-# https://learn.microsoft.com/en-us/training/modules/secure-application-secrets-use-key-vault/6-update-application-configure
-
 # https://github.com/Azure/azure-sdk-for-java/issues/28128
 # See Azure KeyVault config doc  https://microsoft.github.io/spring-cloud-azure/current/reference/html/index.html#basic-usage-3
 # https://github.com/Azure/azure-sdk-for-java/issues/28310
-# Azure Spring Apps managed Config-Server does not yet support Azure Key Vault
-# https://github.com/Azure/Azure-Spring-Cloud/issues/9
-# https://github.com/MicrosoftDocs/azure-docs/issues/91311
 
-server:
-  # start services on random port by default
-  port: 0
-  # The stop processing uses a timeout which provides a grace period during which existing requests will be allowed to complete but no new requests will be permitted
-  shutdown: graceful
 
 # embedded database init, supports mysql too trough the 'mysql' spring profile
 spring:
-  #sql:
-  #  init:
-  #    schema-locations: classpath*:db/hsqldb/schema.sql
-  #    data-locations: classpath*:db/hsqldb/data.sql
+  sql:
+    init:
+      schema-locations: classpath*:db/hsqldb/schema.sql
+      data-locations: classpath*:db/hsqldb/data.sql
+    mode: never
     config:
       # Allow the microservices to override the remote properties with their own System properties or config file
       allow-override: true
@@ -34,7 +23,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none # create-drop
+      ddl-auto: none # create-drop or none
     # https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.data-initialization.using-basic-sql-scripts
     # https://stackoverflow.com/questions/28042426/spring-boot-error-creating-bean-with-name-datasource-defined-in-class-path-r
     # https://www.baeldung.com/spring-boot-data-sql-and-schema-sql
@@ -44,36 +33,17 @@ spring:
     # database-platform: org.hibernate.dialect.MySQLDialect
     database: mysql
 
-# Spring Boot 1.5 makes actuator secure by default
-management.security.enabled: false
-# Enable all Actuators and not only the two available by default /health and /info starting Spring Boot 2.0
-management.endpoints.web.exposure.include: "*"
+  # https://learn.microsoft.com/en-us/azure/spring-apps/how-to-config-server#config-server-refresh
+  cloud:
+    config:
+      auto-refresh: true
+      refresh-interval: 60
+
 
 # Temporary hack required by the Spring Boot 2 / Spring Cloud Finchley branch
 # Waiting issue https://github.com/spring-projects/spring-boot/issues/13042
-spring.cloud.refresh.refreshable: false
-
----
-spring:
-  cloud:
-    azure:
-      profile: # spring.cloud.azure.profile
-        # subscription-id:
-        tenant-id: ${AZURE_TENANT_ID}
-      credential:
-        managed-identity-enabled: true        
-      keyvault:
-        secret:
-          enabled: true
-          property-sources:
-            - name: kv-property-source-endpoint
-              endpoint: ${AZURE_KEY_VAULT_ENDPOINT}
-              credential.managed-identity-enabled: true # https://microsoft.github.io/spring-cloud-azure/current/reference/html/index.html#configuration-17
-              # credential:
-              #  client-id: ${AZURE_CLIENT_ID}
-              #  client-secret: ${AZURE_CLIENT_SECRET}
-              # profile:
-              #  tenant-id: ${AZURE_TENANT_ID}
+# spring.cloud.refresh.refreshable: false
+              
 ---
 spring:
   config:
@@ -85,9 +55,8 @@ spring:
     username: mys_adm
     url: jdbc:mysql://petcliaks.mysql.database.azure.com:3306/petclinic?useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1.2&verifyServerCertificate=true
     # url: jdbc:mysql://localhost:3306/petclinic?useSSL=false
-    # url: jdbc:mysql://petcliaca-mysql-server.mysql.database.azure.com:3306/petclinic?useSSL=true
+    # url: jdbc:mysql://petcliaks-mysql-server.mysql.database.azure.com:3306/petclinic?useSSL=true
     # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
-    # url: jdbc:mysql://petclinic.mysql.database.azure.com:3306/petclinic?useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1.2&verifyServerCertificate=true
     
     # https://docs.spring.io/spring-boot/docs/2.7.3/reference/html/application-properties.html#appendix.application-properties.data
     # spring.datasource.url, spring.datasource.username and spring.datasource.password will be automatically injected from KV secrets SPRING-DATASOURCE-URL, SPRING-DATASOURCE-USERNAME and SPRING-DATASOURCE-PASSWORD
@@ -95,7 +64,7 @@ spring:
     # username: ${MYSQL-SERVER-ADMIN-LOGIN-NAME} # ${MYSQL_SERVER_ADMIN_LOGIN_NAME}
     # password: ${MYSQL-SERVER-ADMIN-PASSWORD} # ${MYSQL_SERVER_ADMIN_PASSWORD}
     
-    initialization-mode: ALWAYS # NEVER
+    initialization-mode: NEVER # NEVER ALWAYS
     # https://javabydeveloper.com/spring-boot-loading-initial-data/
     platform: mysql
     #driver-class-name: com.mysql.jdbc.Driver
@@ -105,44 +74,52 @@ logging.level.com.azure.spring.cloud.starter.keyvault.secrets: debug
 logging.level.com.azure.security.keyvault.secrets: debug
 logging.level.org.springframework.samples.petclinic: debug
 
+#logging.level.org.hibernate: debug
+#logging.level.com.mysql: debug
+#logging.level.javax.persistence: INFO
+
 logging.level.org.springframework: INFO
+#logging.level.org.springframework.boot.autoconfigure.jdbc: debug
+#logging.level.org.springframework.boot.sql.init: debug
+#logging.level.org.springframework.data.jpa: debug
+#logging.level.org.springframework.jdbc.datasource: debug
+#logging.level.org.springframework.boot.jdbc.init.dependency.DataSourceInitializerDetector: debug
+#logging.level.org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializerDetector: debug
+#logging.level.org.springframework.boot.orm.jpa.JpaDataSourceInitializerDetector: debug
+
 logging.level.org.springframework.web: debug
-logging.level.org.hibernate: debug
-logging.level.com.mysql: debug
-logging.level.org.springframework.data.jpa: debug
-logging.level.org.springframework.web: debug
-logging.level.javax.persistence: INFO
-logging.level.org.springframework.jdbc.datasource: debug
-logging.level.org.springframework.boot.sql.init: debug
-logging.level.org.springframework.boot.autoconfigure.jdbc: debug
-logging.level.com.zaxxer.hikari.HikariDataSource: debug
-logging.level.com.zaxxer.hikari.pool.PoolBase: debug
 
-logging.level.org.springframework.boot.jdbc.init.dependency.DataSourceInitializerDetector: debug
-logging.level.org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializerDetector: debug
-logging.level.org.springframework.boot.orm.jpa.JpaDataSourceInitializerDetector: debug
+#logging.level.org.springframework.cloud.gateway: debug
+#logging.level.org.springframework.http.server.reactive: debug
 
-logging.level.o.s.b.context.config.ConfigDataLoader: debug
-logging.level.org.springframework.boot.context.config.ConfigDataLoader: debug
-logging.level.org.springframework.boot.context.config: debug
+#logging.level.com.zaxxer.hikari.HikariDataSource: debug
+#logging.level.com.zaxxer.hikari.pool.PoolBase: debug
 
-logging.level.org.springframework.boot.env.PropertySourceLoader: debug
-logging.level.org.springframework.boot.env.PropertiesPropertySourceLoader: debug
-logging.level.org.springframework.boot.env.YamlPropertySourceLoader: debug
+#logging.level.o.s.b.context.config.ConfigDataLoader: debug
+#logging.level.org.springframework.boot.context.config.ConfigDataLoader: debug
+#logging.level.org.springframework.boot.context.config: debug
 
-logging.level.org.springframework.context.ApplicationContextInitializer: debug
-logging.level.org.springframework.boot.context.ConfigurationWarningsApplicationContextInitializer: debug
-logging.level.org.springframework.boot.context.ContextIdApplicationContextInitializer: debug
+#logging.level.org.springframework.boot.env.PropertySourceLoader: debug
+#logging.level.org.springframework.boot.env.PropertiesPropertySourceLoader: debug
+#logging.level.org.springframework.boot.env.YamlPropertySourceLoader: debug
+
+#logging.level.org.springframework.context.ApplicationContextInitializer: debug
+#logging.level.org.springframework.boot.context.ConfigurationWarningsApplicationContextInitializer: debug
+#logging.level.org.springframework.boot.context.ContextIdApplicationContextInitializer: debug
 
 ---
 # Metrics: 
 # https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#actuator.metrics
 # https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#actuator.endpoints.exposing
 management:
+  security:
+    enabled: false
   endpoint:
     metrics:
       enabled: true
     prometheus:
+      enabled: true
+    gateway:
       enabled: true
   endpoints:
     web:
@@ -160,7 +137,6 @@ management:
       # datadog:
       #   api-key: "YOUR_KEY"
       #   application-key: "YOUR_APPLICATION_KEY"
-
 
 # Chaos Engineering
 ---
